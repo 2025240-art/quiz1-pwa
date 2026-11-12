@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퀴즈 자판기 - Quiz Vending Machine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter & Noto Sans KR) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f5ff',
+                            100: '#e0ebff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.4);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Navbar / Header -->
+    <header class="w-full border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid font-bold fa-cube text-xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        퀴즈 자판기 <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-medium border border-indigo-500/30">Gem Hybrid</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2 sm:space-x-3 text-xs sm:text-sm">
+                <button onclick="openGuideModal()" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-semibold transition duration-200 flex items-center space-x-1.5 cursor-pointer">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>사용 가이드</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col space-y-8">
+
+        <!-- Hero & 2-Step Hybrid Workflow Section -->
+        <section class="space-y-6">
+            <div class="text-center space-y-4">
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-medium">
+                        <i class="fa-solid fa-bolt text-amber-400"></i>
+                        <span>API Key 없이 나만의 제미나이 젬(Gem)과 즉시 연동!</span>
+                    </div>
+                    <button onclick="openGuideModal()" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 border border-slate-600/60 text-slate-200 text-xs sm:text-sm font-medium transition cursor-pointer">
+                        <i class="fa-regular fa-circle-question text-indigo-400"></i>
+                        <span>처음 오셨나요? 30초 사용법 보기</span>
+                    </button>
+                </div>
+                
+                <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+                    어떤 영상이든 <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">퀴즈로 뽑아내세요</span>
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+                    유튜브 URL로 젬 전용 프롬프트를 복사해 결과를 받아온 뒤, 아래 2단계 창에 붙여넣으면 깔끔한 요약과 확인 퀴즈가 완성됩니다.
+                </p>
+            </div>
+
+            <!-- 2-Step Vending Machine Control Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                
+                <!-- STEP 1 Card: URL & Gem Prompt Generator -->
+                <div class="glass-panel p-5 sm:p-6 rounded-2xl flex flex-col justify-between gap-4 glow-effect border border-indigo-500/20">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 rounded-lg bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 text-xs font-extrabold tracking-wide">
+                                STEP 1 · 프롬프트 생성 및 이동
+                            </span>
+                            <span class="text-[11px] text-slate-400"><i class="fa-solid fa-copy mr-1"></i>자동 클립보드 복사</span>
+                        </div>
+
+                        <!-- YouTube URL Input -->
+                        <div>
+                            <label for="videoUrl" class="block text-xs font-semibold text-slate-300 mb-1.5 pl-1">
+                                YouTube 영상 URL <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative flex items-center">
+                                <div class="absolute left-3.5 text-red-400">
+                                    <i class="fa-brands fa-youtube"></i>
+                                </div>
+                                <input 
+                                    type="url" 
+                                    id="videoUrl" 
+                                    placeholder="https://www.youtube.com/watch?v=..." 
+                                    class="w-full bg-slate-900/80 text-white placeholder-slate-500 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Custom Gem URL Input -->
+                        <div>
+                            <label for="gemUrl" class="block text-xs font-semibold text-slate-300 mb-1.5 pl-1 flex justify-between items-center">
+                                <span>내 제미나이 젬(Gem) URL <span class="text-slate-500 font-normal">(선택 · 자동 저장)</span></span>
+                                <span class="text-[11px] text-emerald-400/90"><i class="fa-solid fa-floppy-disk mr-1"></i>자동 저장됨</span>
+                            </label>
+                            <div class="relative flex items-center">
+                                <div class="absolute left-3.5 text-indigo-400">
+                                    <i class="fa-solid fa-gem"></i>
+                                </div>
+                                <input 
+                                    type="url" 
+                                    id="gemUrl" 
+                                    placeholder="https://gemini.google.com/gem/..." 
+                                    oninput="saveGemUrl(this.value)"
+                                    class="w-full bg-slate-900/80 text-white placeholder-slate-500 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700/60 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-200"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <button 
+                            type="button" 
+                            onclick="copyPromptAndOpenGem()" 
+                            class="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+                        >
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>1단계: 젬(Gem)용 프롬프트 복사 & 이동</span>
+                        </button>
+
+                        <!-- Fallback Direct Link if Popup Blocked -->
+                        <div id="popupFallbackBox" class="hidden text-center p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
+                            팝업이 차단되었나요? 
+                            <a id="directGemLink" href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="underline font-bold text-amber-200 hover:text-white ml-1">
+                                여기 눌러 제미나이 열기 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2 Card: Paste JSON & Render -->
+                <div class="glass-panel p-5 sm:p-6 rounded-2xl flex flex-col justify-between gap-4 border border-purple-500/20">
+                    <div class="space-y-3 flex-1 flex flex-col">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 rounded-lg bg-purple-600/20 border border-purple-500/40 text-purple-300 text-xs font-extrabold tracking-wide">
+                                STEP 2 · 응답 붙여넣기 & 뽑기
+                            </span>
+                            <button type="button" onclick="clearJsonInput()" class="text-[11px] text-slate-400 hover:text-slate-200 transition">
+                                <i class="fa-solid fa-eraser mr-1"></i>지우기
+                            </button>
+                        </div>
+
+                        <div class="flex-1 flex flex-col">
+                            <label for="jsonInput" class="block text-xs font-semibold text-slate-300 mb-1.5 pl-1">
+                                제미나이 젬이 생성한 JSON 응답 붙여넣기
+                            </label>
+                            <textarea 
+                                id="jsonInput" 
+                                rows="5"
+                                placeholder='제미나이 창에서 복사한 결과(```json ... ``` 포함 가능)를 여기에 Ctrl+V 로 붙여넣으세요.'
+                                class="w-full flex-1 bg-slate-900/80 text-slate-200 placeholder-slate-600 text-xs font-mono p-3.5 rounded-xl border border-slate-700/60 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition duration-200 resize-none"
+                            ></textarea>
+                        </div>
+
+                        <!-- Inline Parse Error Message -->
+                        <div id="jsonErrorBox" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-start space-x-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 mt-0.5 shrink-0"></i>
+                            <span id="jsonErrorMsg">JSON 형식이 올바르지 않습니다.</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button 
+                            type="button" 
+                            onclick="generateFromPastedJson()" 
+                            class="w-full px-5 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition duration-200 flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+                        >
+                            <i class="fa-solid fa-cube text-base"></i>
+                            <span>2단계: 퀴즈 자판기 뽑기 (화면 생성)</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Initial Placeholder State -->
+        <div id="emptyState" class="glass-panel rounded-2xl p-8 text-center border border-dashed border-slate-700/80 my-2">
+            <div class="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center mx-auto mb-4 text-slate-400">
+                <i class="fa-solid fa-box-open text-2xl"></i>
+            </div>
+            <h3 class="text-slate-300 font-bold text-lg">아직 뽑힌 퀴즈가 없습니다</h3>
+            <p class="text-slate-500 text-sm mt-1 max-w-md mx-auto">
+                위 <span class="text-indigo-400 font-medium">1단계</span>에서 프롬프트를 복사해 제미나이 젬에게 전달한 뒤, 응답받은 JSON을 <span class="text-emerald-400 font-medium">2단계</span>에 붙여넣어 주세요.
+            </p>
+        </div>
+
+        <!-- Content Output Container (Hidden by default) -->
+        <div id="resultContent" class="hidden space-y-8">
+            
+            <!-- Video Info Header Card -->
+            <div class="glass-panel rounded-2xl p-5 border border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-indigo-950/30">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+                        <i class="fa-brands fa-youtube text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold text-indigo-400 tracking-wider uppercase">퀴즈 추출 완료</span>
+                        <h3 id="videoTitle" class="text-lg font-bold text-white line-clamp-1">영상 핵심 요약 및 확인 퀴즈</h3>
+                        <p id="videoMeta" class="text-xs text-slate-400 mt-0.5">Gemini Gem 하이브리드 연동 결과</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 text-xs text-slate-300 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0">
+                    <button onclick="resetAnswers()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-right"></i> 퀴즈 다시 풀기
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 1: 3~5줄 핵심 요약 섹션 -->
+            <section class="glass-panel rounded-2xl p-6 sm:p-8 space-y-5 border border-slate-800 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-purple-500"></div>
+                
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                            <i class="fa-solid fa-list-check text-lg"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">핵심 요약 (Summary)</h3>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700 hidden sm:inline-block">3~5줄 핵심 정리</span>
+                        <button onclick="copySummaryText()" class="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition flex items-center gap-1.5">
+                            <i class="fa-regular fa-copy"></i> 요약 복사
+                        </button>
+                    </div>
+                </div>
+
+                <div id="summaryList" class="space-y-3 pt-2">
+                    <!-- Dynamic Summary Items Will Insert Here -->
+                </div>
+            </section>
+
+            <!-- SECTION 2: 확인 퀴즈 섹션 -->
+            <section class="space-y-6">
+                <!-- Quiz Title Header & Score Board -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-2xl border border-slate-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                            <i class="fa-solid fa-brain text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">확인 퀴즈 (Interactive Quiz)</h3>
+                            <p class="text-xs text-slate-400">객관식 및 단답형 문제를 풀고 실력을 점검하세요.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 self-start sm:self-auto">
+                        <!-- Grade All Button -->
+                        <button onclick="gradeAllQuizzes()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-check-double"></i> 전체 채점하기
+                        </button>
+                        <!-- Score Status Badge -->
+                        <div class="flex items-center space-x-2.5 bg-slate-900/80 px-3.5 py-1.5 rounded-xl border border-slate-700/60">
+                            <div class="text-xs text-slate-400">점수</div>
+                            <div class="text-base sm:text-lg font-black text-indigo-400" id="scoreDisplay">0 / 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Questions List Container -->
+                <div id="quizContainer" class="space-y-6">
+                    <!-- Dynamic Quiz Cards Will Insert Here -->
+                </div>
+
+                <!-- Global Action Footer -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                    <div>
+                        <h4 class="font-bold text-white">모든 문제를 다 풀어보셨나요?</h4>
+                        <p class="text-xs text-slate-400">정답 보기 버튼을 통해 전체 해설을 한눈에 확인할 수 있습니다.</p>
+                    </div>
+                    <button 
+                        onclick="toggleAllExplanations()" 
+                        id="toggleAllBtn"
+                        class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-sm border border-slate-700 transition flex items-center gap-2 whitespace-nowrap"
+                    >
+                        <i class="fa-solid fa-eye"></i>
+                        <span>전체 정답 및 해설 펼치기</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>© 2026 퀴즈 자판기 (Quiz Vending Machine). All rights reserved.</p>
+            <div class="flex items-center space-x-4">
+                <span class="text-slate-400">Gemini Gem 하이브리드 연동 모드</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-in-out glass-panel px-4 py-3 rounded-xl shadow-2xl border border-indigo-500/40 flex items-center space-x-3 text-sm text-white pointer-events-none max-w-md">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg shrink-0"></i>
+        <span id="toastMsg">메시지 내용</span>
+    </div>
+
+    <!-- User Guide / Manual Modal -->
+    <div id="guideModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-200" onclick="handleModalBackdropClick(event)">
+        <div class="glass-panel bg-slate-900/95 w-full max-w-2xl max-h-[88vh] rounded-2xl border border-indigo-500/30 shadow-2xl flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+                        <i class="fa-solid fa-book-open text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-white">퀴즈 자판기 사용 매뉴얼 (가이드)</h3>
+                        <p class="text-xs text-slate-400">API Key 없이 내 제미나이 젬(Gem)으로 무료·무제한 퀴즈 생성하기</p>
+                    </div>
+                </div>
+                <button onclick="closeGuideModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer" aria-label="닫기">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-300 leading-relaxed">
+                
+                <!-- Overview Banner -->
+                <div class="p-4 rounded-xl bg-gradient-to-r from-indigo-950/70 to-purple-950/50 border border-indigo-500/30 space-y-1.5">
+                    <div class="font-bold text-indigo-300 flex items-center gap-2">
+                        <i class="fa-solid fa-sparkles text-amber-400"></i>
+                        <span>왜 2단계 하이브리드 방식인가요?</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300">
+                        복잡한 유료 API Key 발급 없이, 본인이 보유한 <strong>Google 제미나이(Gemini) 웹 또는 나만의 젬(Gem)</strong>을 그대로 활용해 영상 요약과 인터랙티브 퀴즈를 즉시 화면으로 변환하는 스마트 워크플로우입니다.
+                    </p>
+                </div>
+
+                <!-- Pre-requisite: Gem URL -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-white flex items-center gap-2 text-base">
+                        <span class="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-indigo-400 text-xs font-extrabold">사전 준비</span>
+                        <span>제미나이 젬(Gem) URL 준비 방법</span>
+                    </h4>
+                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs sm:text-sm">
+                        <p>• 직접 만든 제미나이 젬이 있다면 해당 젬의 주소(<code class="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-300">https://gemini.google.com/gem/...</code>)를 입력해 두세요. <strong>브라우저에 자동 저장</strong>되어 다음 방문 시 다시 입력할 필요가 없습니다.</p>
+                        <p>• 별도 젬이 없거나 입력창을 비워두어도 기본 제미나이(<code class="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-300">https://gemini.google.com/app</code>)가 자동으로 열리므로 누구나 바로 사용할 수 있습니다.</p>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Guide -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-white text-base">3단계 초간단 이용 절차</h4>
+
+                    <!-- STEP 1 -->
+                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3.5">
+                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-indigo-600/30">1</span>
+                        <div class="space-y-1">
+                            <h5 class="font-bold text-white">YouTube URL 입력 후 [1단계: 프롬프트 복사 & 이동] 클릭</h5>
+                            <p class="text-xs text-slate-400">
+                                학습할 유튜브 영상 주소를 넣고 1단계 버튼을 누르면, 영상 분석 및 JSON 출력 규칙이 담긴 전용 프롬프트가 <strong>클립보드에 자동 복사</strong>되며 새 탭에서 제미나이 창이 열립니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3.5">
+                        <span class="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-purple-600/30">2</span>
+                        <div class="space-y-1">
+                            <h5 class="font-bold text-white">열린 제미나이 창에 붙여넣기(Ctrl+V / Cmd+V) 후 전송</h5>
+                            <p class="text-xs text-slate-400">
+                                제미나이 채팅 입력창에 복사된 프롬프트를 그대로 붙여넣고 전송(<kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px]">Enter</kbd>)하세요. 잠시 후 제미나이가 요약과 퀴즈가 담긴 JSON 결과를 출력합니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-start gap-3.5">
+                        <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-emerald-600/30">3</span>
+                        <div class="space-y-1">
+                            <h5 class="font-bold text-white">응답 복사 후 [2단계: 퀴즈 자판기 뽑기] 클릭</h5>
+                            <p class="text-xs text-slate-400">
+                                제미나이가 출력한 답변 우측 상단의 <strong>[코드 복사]</strong> 버튼을 누른 뒤, 다시 이 페이지의 2단계 입력창에 붙여넣고 뽑기 버튼을 누르면 요약 카드와 인터랙티브 퀴즈가 완성됩니다!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tips & FAQ -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-white flex items-center gap-2 text-base">
+                        <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                        <span>꿀팁 & 자주 묻는 질문 (FAQ)</span>
+                    </h4>
+                    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/90 space-y-2.5 text-xs text-slate-300">
+                        <div>
+                            <p class="font-semibold text-indigo-300">Q. 응답 앞뒤에 <code class="bg-slate-800 px-1 rounded">```json</code> 기호나 인사말이 섞여 있어도 되나요?</p>
+                            <p class="text-slate-400 mt-0.5">A. 네! 자동 파싱 엔진이 마크다운 코드 블록 기호와 불필요한 텍스트를 자동으로 걸러내고 핵심 JSON 데이터만 정확히 추출합니다.</p>
+                        </div>
+                        <div class="border-t border-slate-800/80 pt-2">
+                            <p class="font-semibold text-indigo-300">Q. 어떤 화면이 나오는지 먼저 구경해보고 싶어요!</p>
+                            <p class="text-slate-400 mt-0.5">A. 상단 헤더의 <strong>[샘플 JSON 바로 뽑기]</strong> 버튼이나 아래 체험 버튼을 누르면 실제 생성된 요약 및 퀴즈 화면을 1초 만에 테스트할 수 있습니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/90 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <button onclick="closeGuideModal(); loadSampleJson();" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span>샘플 데모로 바로 체험해보기</span>
+                </button>
+                <button onclick="closeGuideModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition cursor-pointer">
+                    확인했습니다 (닫기)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Sample JSON Data for Instant Preview
+        const sampleGemJson = {
+            title: "[AI 혁신] 생성형 AI 시대, 개발자의 미래와 핵심 역량 분석",
+            summary: [
+                "생성형 AI 기술의 발전으로 단순 코드 작성보다는 **시스템 설계 및 문제 정의 능력**의 중요성이 크게 증대되었습니다.",
+                "프롬프트 엔지니어링과 AI 에이전트 오케스트레이션을 활용한 **개발 생산성 5배 이상 향상** 사례를 제시합니다.",
+                "미래 소프트웨어 엔지니어는 AI가 생성한 코드의 보안성과 성능을 검증하는 **QA 및 아키텍트 역할**로 확장될 전망입니다.",
+                "지속적인 학습 태도와 명확한 커뮤니케이션 능력이 AI 시대 개발자의 핵심 경쟁력으로 꼽힙니다."
+            ],
+            quizzes: [
+                {
+                    type: "multiple_choice",
+                    question: "AI 시대에 개발자에게 가장 중요해진 핵심 역량으로 강조된 것은 무엇인가요?",
+                    options: [
+                        "단순 암기식 타자 속도",
+                        "시스템 설계 및 문제 정의 능력",
+                        "하드웨어 서버 직접 조립 능력",
+                        "레거시 언어만을 고수하는 태도"
+                    ],
+                    answer: "시스템 설계 및 문제 정의 능력",
+                    explanation: "AI가 단순 코드 작성을 대신함에 따라 전체 시스템 구조를 설계하고 문제를 정확히 정의하는 능력이 가장 중요해졌습니다."
+                },
+                {
+                    type: "multiple_choice",
+                    question: "생성형 AI와 AI 에이전트를 적절히 활용했을 때 제시된 개발 생산성 변화는 무엇인가요?",
+                    options: [
+                        "생산성 변화 없음",
+                        "생산성 약 50% 감소",
+                        "생산성 약 5배 이상 향상",
+                        "개발 프로세스 전체 중단"
+                    ],
+                    answer: "생산성 약 5배 이상 향상",
+                    explanation: "AI 도구를 효율적으로 오케스트레이션할 경우 개발 생산성이 5배 이상 극대화되는 사례가 소개되었습니다."
+                },
+                {
+                    type: "short_answer",
+                    question: "[단답형] AI에게 원하는 결과물을 얻기 위해 입력하는 명확한 명령어나 지시문을 뜻하는 용어는 무엇인가요?",
+                    answer: "프롬프트",
+                    explanation: "AI에게 명확한 맥락과 지시를 전달하는 입력값을 '프롬프트(Prompt)'라고 부릅니다."
+                }
+            ]
+        };
+
+        // Application State
+        let currentData = null;
+        let userAnswers = {};
+
+        // User Guide Modal Controls
+        function openGuideModal() {
+            const modal = document.getElementById('guideModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeGuideModal() {
+            const modal = document.getElementById('guideModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+
+        function handleModalBackdropClick(event) {
+            if (event.target && event.target.id === 'guideModal') {
+                closeGuideModal();
+            }
+        }
+
+        // Close Modal on ESC Key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('guideModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeGuideModal();
+                }
+            }
+        });
+
+        // On Page Load: Restore Saved Gem URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedGemUrl = localStorage.getItem('quiz_vending_gem_url');
+            if (savedGemUrl) {
+                document.getElementById('gemUrl').value = savedGemUrl;
+            }
+        });
+
+        // Save Custom Gem URL to localStorage
+        function saveGemUrl(val) {
+            const trimmed = val.trim();
+            if (trimmed) {
+                localStorage.setItem('quiz_vending_gem_url', trimmed);
+            } else {
+                localStorage.removeItem('quiz_vending_gem_url');
+            }
+        }
+
+        // Fill Sample YouTube URL
+        function fillSampleUrl() {
+            document.getElementById('videoUrl').value = "https://www.youtube.com/watch?v=aircAruvnKk";
+            showToast("샘플 유튜브 URL이 입력되었습니다. 1단계 버튼을 눌러보세요!");
+        }
+
+        // Load Sample JSON into Step 2 and Render Immediately
+        function loadSampleJson() {
+            const jsonStr = JSON.stringify(sampleGemJson, null, 2);
+            document.getElementById('jsonInput').value = jsonStr;
+            generateFromPastedJson();
+        }
+
+        // Clear Step 2 Textarea
+        function clearJsonInput() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('jsonErrorBox').classList.add('hidden');
+        }
+
+        // Cross-browser safe Clipboard Copy helper
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
+            } else {
+                return fallbackCopyText(text);
+            }
+        }
+
+        function fallbackCopyText(text) {
+            return new Promise((resolve, reject) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (successful) resolve();
+                    else reject(new Error('복사 실패'));
+                } catch (err) {
+                    document.body.removeChild(textArea);
+                    reject(err);
+                }
+            });
+        }
+
+        // STEP 1: Generate Prompt, Copy to Clipboard, and Open Gem URL
+        async function copyPromptAndOpenGem() {
+            const videoUrlInput = document.getElementById('videoUrl');
+            const videoUrl = videoUrlInput.value.trim();
+
+            if (!videoUrl) {
+                videoUrlInput.focus();
+                showToast("먼저 유튜브 영상 URL을 입력해주세요!", true);
+                return;
+            }
+
+            let gemUrl = document.getElementById('gemUrl').value.trim();
+            if (!gemUrl) {
+                gemUrl = "https://gemini.google.com/app";
+            } else {
+                saveGemUrl(gemUrl);
+            }
+
+            // Construct Structured Prompt for Gemini Gem
+            const promptText = `다음 유튜브 영상의 내용을 분석하여 핵심 요약과 확인 퀴즈를 만들어줘.
+영상 URL: ${videoUrl}
+
+[출력 규칙 - 반드시 아래 JSON 형식만 출력하고 다른 인사말이나 부연 설명은 절대 쓰지 마]
+\`\`\`json
+{
+  "title": "영상의 핵심 주제 제목",
+  "summary": [
+    "핵심 요약 1줄 (중요 키워드는 **강조** 표기)",
+    "핵심 요약 2줄",
+    "핵심 요약 3줄",
+    "핵심 요약 4줄"
+  ],
+  "quizzes": [
+    {
+      "type": "multiple_choice",
+      "question": "객관식 문제 내용",
+      "options": ["보기1", "보기2", "보기3", "보기4"],
+      "answer": "정답 보기의 텍스트 전체",
+      "explanation": "정답에 대한 상세 해설"
+    },
+    {
+      "type": "short_answer",
+      "question": "단답형 문제 내용",
+      "answer": "핵심 단답 정답",
+      "explanation": "정답에 대한 상세 해설"
+    }
+  ]
+}
+\`\`\`
+조건:
+1. summary 배열은 반드시 3~5개의 문장으로 작성할 것.
+2. quizzes 배열은 객관식(multiple_choice) 2~3문제와 단답형(short_answer) 1~2문제를 혼합하여 총 3~5문제로 구성할 것.
+3. 오직 유효한 JSON 코드 블록만 출력할 것.`;
+
+            try {
+                await copyToClipboard(promptText);
+                showToast("프롬프트가 복사되었습니다! 열린 제미나이 젬 창에 붙여넣기(Ctrl+V) 하세요.");
+            } catch (e) {
+                showToast("클립보드 복사 권한을 확인해주세요.", true);
+            }
+
+            // Open Gem URL in new tab & show fallback link if blocked
+            const fallbackBox = document.getElementById('popupFallbackBox');
+            const directLink = document.getElementById('directGemLink');
+            directLink.href = gemUrl;
+
+            const newWin = window.open(gemUrl, '_blank', 'noopener,noreferrer');
+            if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+                fallbackBox.classList.remove('hidden');
+            } else {
+                fallbackBox.classList.add('hidden');
+            }
+        }
+
+        // STEP 2: Parse Pasted JSON (handles markdown fences) and Render UI
+        function generateFromPastedJson() {
+            const rawInput = document.getElementById('jsonInput').value.trim();
+            const errorBox = document.getElementById('jsonErrorBox');
+            const errorMsg = document.getElementById('jsonErrorMsg');
+
+            errorBox.classList.add('hidden');
+
+            if (!rawInput) {
+                errorMsg.innerText = "제미나이 젬에서 복사한 JSON 응답을 먼저 붙여넣어 주세요.";
+                errorBox.classList.remove('hidden');
+                showToast("JSON 응답 내용이 비어있습니다.", true);
+                return;
+            }
+
+            try {
+                // Extract JSON block if wrapped in ```json ... ``` or ``` ... ```
+                let cleanedJsonStr = rawInput;
+                const codeBlockMatch = rawInput.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+                if (codeBlockMatch && codeBlockMatch[1]) {
+                    cleanedJsonStr = codeBlockMatch[1].trim();
+                } else {
+                    // Fallback: extract substring from first '{' to last '}'
+                    const firstBrace = rawInput.indexOf('{');
+                    const lastBrace = rawInput.lastIndexOf('}');
+                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                        cleanedJsonStr = rawInput.substring(firstBrace, lastBrace + 1);
+                    }
+                }
+
+                const parsed = JSON.parse(cleanedJsonStr);
+
+                // Validate schema structure
+                if (!parsed || typeof parsed !== 'object') {
+                    throw new Error("올바른 JSON 객체 구조가 아닙니다.");
+                }
+                if (!Array.isArray(parsed.summary) || parsed.summary.length === 0) {
+                    throw new Error("'summary' 배열(3~5줄 핵심 요약)이 누락되었거나 비어 있습니다.");
+                }
+                if (!Array.isArray(parsed.quizzes) || parsed.quizzes.length === 0) {
+                    throw new Error("'quizzes' 배열(확인 퀴즈 목록)이 누락되었거나 비어 있습니다.");
+                }
+
+                // Normalize quizzes into internal format
+                const normalizedQuizzes = parsed.quizzes.map((q, index) => {
+                    const qTypeRaw = (q.type || '').toLowerCase();
+                    const isChoice = qTypeRaw.includes('choice') || qTypeRaw.includes('객관') || Array.isArray(q.options);
+
+                    if (isChoice) {
+                        const options = Array.isArray(q.options) && q.options.length > 0 ? q.options : ["예", "아니오"];
+                        // Resolve answer index whether answer is number index or option text
+                        let answerIndex = 0;
+                        if (typeof q.answer === 'number' && q.answer >= 0 && q.answer < options.length) {
+                            answerIndex = q.answer;
+                        } else if (typeof q.answer === 'string') {
+                            const exactIdx = options.findIndex(opt => opt.trim() === q.answer.trim());
+                            if (exactIdx !== -1) {
+                                answerIndex = exactIdx;
+                            } else {
+                                const partialIdx = options.findIndex(opt => opt.includes(q.answer.trim()) || q.answer.includes(opt.trim()));
+                                if (partialIdx !== -1) answerIndex = partialIdx;
+                            }
+                        }
+
+                        return {
+                            id: index + 1,
+                            type: 'choice',
+                            question: q.question || `문제 ${index + 1}`,
+                            options: options,
+                            answer: answerIndex,
+                            explanation: q.explanation || "제공된 해설이 없습니다."
+                        };
+                    } else {
+                        const ansText = String(q.answer || q.sampleAnswer || '').trim();
+                        const keywords = Array.isArray(q.keywords) && q.keywords.length > 0
+                            ? q.keywords
+                            : ansText.split(/[,/()]+/).map(s => s.trim()).filter(Boolean);
+
+                        return {
+                            id: index + 1,
+                            type: 'short',
+                            question: q.question || `단답형 문제 ${index + 1}`,
+                            keywords: keywords.length > 0 ? keywords : [ansText],
+                            sampleAnswer: ansText || "정답 미지정",
+                            explanation: q.explanation || "제공된 해설이 없습니다."
+                        };
+                    }
+                });
+
+                const enteredUrl = document.getElementById('videoUrl').value.trim();
+                currentData = {
+                    title: parsed.title || "영상 핵심 요약 및 확인 퀴즈",
+                    meta: enteredUrl ? `대상 영상: ${enteredUrl}` : "Gemini Gem 하이브리드 연동 결과",
+                    summary: parsed.summary,
+                    quizzes: normalizedQuizzes
+                };
+
+                renderData(currentData);
+                showToast("퀴즈 자판기 추출 완료! 아래에서 요약과 퀴즈를 확인하세요.");
+
+            } catch (err) {
+                console.error("JSON Parse Error:", err);
+                errorMsg.innerText = `JSON 파싱 오류: ${err.message} (제미나이가 출력한 전체 텍스트를 다시 복사해 붙여넣어 보세요.)`;
+                errorBox.classList.remove('hidden');
+                showToast("JSON 형식을 인식하지 못했습니다. 오류 안내를 확인해주세요.", true);
+            }
+        }
+
+        // Render Summary and Quizzes to DOM
+        function renderData(data) {
+            userAnswers = {}; // Reset user answers
+            allExpanded = false;
+
+            const toggleAllBtn = document.getElementById('toggleAllBtn');
+            if (toggleAllBtn) {
+                toggleAllBtn.innerHTML = `<i class="fa-solid fa-eye"></i><span>전체 정답 및 해설 펼치기</span>`;
+            }
+
+            document.getElementById('emptyState').classList.add('hidden');
+            const resultEl = document.getElementById('resultContent');
+            resultEl.classList.remove('hidden');
+
+            // Render Header Video Meta
+            document.getElementById('videoTitle').innerText = data.title;
+            document.getElementById('videoMeta').innerText = data.meta;
+
+            // Render 3~5 Lines Summary
+            const summaryContainer = document.getElementById('summaryList');
+            summaryContainer.innerHTML = '';
+            data.summary.forEach((item, idx) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = "flex items-start space-x-3 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-sm text-slate-200 leading-relaxed";
+                
+                // Process bold markdown tags (**text**)
+                const formattedText = String(item).replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-300 font-semibold">$1</strong>');
+
+                itemEl.innerHTML = `
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center mt-0.5">${idx + 1}</span>
+                    <div class="flex-1">${formattedText}</div>
+                `;
+                summaryContainer.appendChild(itemEl);
+            });
+
+            // Render Quiz Cards
+            const quizContainer = document.getElementById('quizContainer');
+            quizContainer.innerHTML = '';
+
+            data.quizzes.forEach((quiz, idx) => {
+                const card = document.createElement('div');
+                card.className = "glass-panel rounded-2xl p-6 border border-slate-800 transition duration-300 hover:border-slate-700 space-y-4";
+                card.id = `quiz-card-${quiz.id}`;
+
+                let quizBodyHTML = '';
+
+                if (quiz.type === 'choice') {
+                    // Multiple-choice buttons
+                    quizBodyHTML = `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            ${quiz.options.map((opt, oIdx) => `
+                                <button 
+                                    type="button"
+                                    onclick="selectChoice(${quiz.id}, ${oIdx})" 
+                                    id="btn-q${quiz.id}-opt${oIdx}"
+                                    class="opt-btn-${quiz.id} text-left px-4 py-3 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 text-slate-200 text-sm font-medium transition flex items-start space-x-3 group cursor-pointer"
+                                >
+                                    <span class="w-5 h-5 rounded-full border border-slate-600 group-hover:border-indigo-400 flex items-center justify-center text-xs text-slate-400 shrink-0 mt-0.5 font-bold id-badge">${oIdx + 1}</span>
+                                    <span class="flex-1">${opt}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (quiz.type === 'short') {
+                    // Short-answer input
+                    quizBodyHTML = `
+                        <div class="pt-2 flex flex-col sm:flex-row gap-2">
+                            <input 
+                                type="text" 
+                                id="input-q${quiz.id}"
+                                placeholder="정답을 입력하세요..." 
+                                onkeyup="if(event.key==='Enter') checkShortAnswer(${quiz.id})"
+                                class="flex-1 bg-slate-900/90 text-white placeholder-slate-500 text-sm px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-indigo-500 transition"
+                            />
+                            <button 
+                                type="button"
+                                onclick="checkShortAnswer(${quiz.id})" 
+                                id="submit-q${quiz.id}"
+                                class="px-5 py-3 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium text-sm transition shrink-0 cursor-pointer"
+                            >
+                                정답 확인
+                            </button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <h4 class="text-base sm:text-lg font-bold text-white leading-snug"><span class="text-indigo-400 mr-1.5">Q${idx + 1}.</span>${quiz.question}</h4>
+                        <span class="text-xs px-2.5 py-1 rounded-full ${quiz.type === 'choice' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'} font-medium shrink-0">
+                            ${quiz.type === 'choice' ? '객관식' : '단답형'}
+                        </span>
+                    </div>
+
+                    ${quizBodyHTML}
+
+                    <!-- Feedback Banner & Explanation Accordion -->
+                    <div id="feedback-${quiz.id}" class="hidden pt-3 border-t border-slate-800/80 space-y-3">
+                        <div id="status-badge-${quiz.id}" class="hidden px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2">
+                            <!-- Dynamic success/error icon + message -->
+                        </div>
+                        
+                        <!-- Toggleable Explanation -->
+                        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 text-xs sm:text-sm text-slate-300 space-y-1.5">
+                            <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-lightbulb"></i> 정답 및 해설
+                            </div>
+                            <p class="text-slate-200 font-medium">정답: <span class="text-emerald-400 font-bold">${quiz.type === 'choice' ? quiz.options[quiz.answer] : quiz.sampleAnswer}</span></p>
+                            <p class="text-slate-400 leading-relaxed">${quiz.explanation}</p>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Button for Explanation -->
+                    <div class="flex justify-end pt-1">
+                        <button 
+                            type="button"
+                            onclick="toggleSingleExplanation(${quiz.id})" 
+                            class="text-xs text-slate-400 hover:text-indigo-400 transition flex items-center gap-1 cursor-pointer"
+                        >
+                            <i class="fa-solid fa-chevron-down text-[10px]" id="arrow-${quiz.id}"></i>
+                            <span id="toggle-txt-${quiz.id}">해설 보기</span>
+                        </button>
+                    </div>
+                `;
+
+                quizContainer.appendChild(card);
+            });
+
+            updateScoreDisplay();
+
+            // Smooth scroll to results
+            resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Copy Summary Text to Clipboard
+        async function copySummaryText() {
+            if (!currentData || !currentData.summary) return;
+            const cleanLines = currentData.summary.map((line, i) => `${i + 1}. ${line.replace(/\*\*/g, '')}`);
+            const textToCopy = `[${currentData.title} - 핵심 요약]\n` + cleanLines.join('\n');
+            try {
+                await copyToClipboard(textToCopy);
+                showToast("핵심 요약 내용이 클립보드에 복사되었습니다!");
+            } catch (e) {
+                showToast("복사에 실패했습니다.", true);
+            }
+        }
+
+        // Grade All Unanswered or Answered Quizzes at Once
+        function gradeAllQuizzes() {
+            if (!currentData) return;
+
+            currentData.quizzes.forEach(quiz => {
+                if (quiz.type === 'choice') {
+                    const selectedIdx = userAnswers[quiz.id] ? userAnswers[quiz.id].value : -1;
+                    if (selectedIdx !== -1) {
+                        selectChoice(quiz.id, selectedIdx);
+                    } else {
+                        // Mark unanswered choice
+                        userAnswers[quiz.id] = { value: -1, isCorrect: false };
+                        const buttons = document.querySelectorAll(`.opt-btn-${quiz.id}`);
+                        buttons.forEach((btn, idx) => {
+                            if (idx === quiz.answer) {
+                                btn.classList.add('border-emerald-500/60', 'bg-emerald-500/10', 'text-emerald-300');
+                            }
+                        });
+                        showFeedback(quiz.id, false, "미선택 문항입니다. 정답과 해설을 확인하세요.");
+                    }
+                } else if (quiz.type === 'short') {
+                    const inputEl = document.getElementById(`input-q${quiz.id}`);
+                    const val = inputEl ? inputEl.value.trim() : '';
+                    if (val) {
+                        checkShortAnswer(quiz.id, true);
+                    } else {
+                        userAnswers[quiz.id] = { value: '', isCorrect: false };
+                        if (inputEl) {
+                            inputEl.className = "flex-1 bg-slate-900/90 text-red-300 font-medium placeholder-slate-500 text-sm px-4 py-3 rounded-xl border border-red-500 focus:outline-none";
+                        }
+                        showFeedback(quiz.id, false, `미입력 문항입니다. 권장 정답은 '${quiz.sampleAnswer}' 입니다.`);
+                    }
+                }
+            });
+
+            updateScoreDisplay();
+            showToast("전체 문항 채점이 완료되었습니다!");
+        }
+
+        // Multiple Choice Option Selection
+        function selectChoice(quizId, optionIndex) {
+            const quiz = currentData.quizzes.find(q => q.id === quizId);
+            if (!quiz) return;
+
+            const isCorrect = (optionIndex === quiz.answer);
+            userAnswers[quizId] = { value: optionIndex, isCorrect: isCorrect };
+
+            // Update Option UI Styles
+            const buttons = document.querySelectorAll(`.opt-btn-${quizId}`);
+            buttons.forEach((btn, idx) => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-500/10', 'text-emerald-300', 'border-red-500', 'bg-red-500/10', 'text-red-300', 'border-emerald-500/50', 'border-emerald-500/60', 'bg-emerald-500/5');
+                
+                if (idx === optionIndex) {
+                    if (isCorrect) {
+                        btn.classList.add('border-emerald-500', 'bg-emerald-500/10', 'text-emerald-300');
+                    } else {
+                        btn.classList.add('border-red-500', 'bg-red-500/10', 'text-red-300');
+                    }
+                } else if (idx === quiz.answer && !isCorrect) {
+                    // Highlight true answer subtly
+                    btn.classList.add('border-emerald-500/50', 'bg-emerald-500/5');
+                }
+            });
+
+            // Show Feedback & Auto Expand Explanation
+            showFeedback(quizId, isCorrect, isCorrect ? "정답입니다! 훌륭합니다." : "오답입니다. 아래 해설을 확인해보세요.");
+            updateScoreDisplay();
+        }
+
+        // Short Answer Submission
+        function checkShortAnswer(quizId, silent = false) {
+            const quiz = currentData.quizzes.find(q => q.id === quizId);
+            if (!quiz) return;
+
+            const inputEl = document.getElementById(`input-q${quizId}`);
+            const val = inputEl.value.trim().toLowerCase();
+
+            if (!val) {
+                if (!silent) showToast("정답을 입력해주세요!", true);
+                return;
+            }
+
+            // Check against keywords array or full answer match
+            const normalizedAnswer = quiz.sampleAnswer.toLowerCase().replace(/\s+/g, '');
+            const normalizedUser = val.replace(/\s+/g, '');
+            const isCorrect = normalizedUser === normalizedAnswer || quiz.keywords.some(kw => val.includes(kw.toLowerCase()));
+            
+            userAnswers[quizId] = { value: val, isCorrect: isCorrect };
+
+            if (isCorrect) {
+                inputEl.className = "flex-1 bg-slate-900/90 text-emerald-300 font-bold placeholder-slate-500 text-sm px-4 py-3 rounded-xl border border-emerald-500 focus:outline-none";
+                showFeedback(quizId, true, "정답입니다! 핵심 내용이 정확히 일치합니다.");
+            } else {
+                inputEl.className = "flex-1 bg-slate-900/90 text-red-300 font-medium placeholder-slate-500 text-sm px-4 py-3 rounded-xl border border-red-500 focus:outline-none";
+                showFeedback(quizId, false, `아쉽습니다. 권장 정답은 '${quiz.sampleAnswer}' 입니다.`);
+            }
+
+            updateScoreDisplay();
+        }
+
+        // Show Feedback Box & Open Explanation
+        function showFeedback(quizId, isCorrect, message) {
+            const fbBox = document.getElementById(`feedback-${quizId}`);
+            const badge = document.getElementById(`status-badge-${quizId}`);
+            
+            fbBox.classList.remove('hidden');
+            badge.classList.remove('hidden');
+
+            if (isCorrect) {
+                badge.className = "px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400";
+                badge.innerHTML = `<i class="fa-solid fa-circle-check text-sm"></i><span>${message}</span>`;
+            } else {
+                badge.className = "px-3 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 bg-red-500/10 border border-red-500/30 text-red-400";
+                badge.innerHTML = `<i class="fa-solid fa-circle-xmark text-sm"></i><span>${message}</span>`;
+            }
+
+            // Set toggle text state
+            const toggleTxt = document.getElementById(`toggle-txt-${quizId}`);
+            const arrow = document.getElementById(`arrow-${quizId}`);
+            if (toggleTxt) toggleTxt.innerText = "해설 접기";
+            if (arrow) arrow.className = "fa-solid fa-chevron-up text-[10px]";
+        }
+
+        // Toggle Single Explanation Visibility
+        function toggleSingleExplanation(quizId) {
+            const fbBox = document.getElementById(`feedback-${quizId}`);
+            const toggleTxt = document.getElementById(`toggle-txt-${quizId}`);
+            const arrow = document.getElementById(`arrow-${quizId}`);
+
+            if (fbBox.classList.contains('hidden')) {
+                fbBox.classList.remove('hidden');
+                toggleTxt.innerText = "해설 접기";
+                arrow.className = "fa-solid fa-chevron-up text-[10px]";
+            } else {
+                fbBox.classList.add('hidden');
+                toggleTxt.innerText = "해설 보기";
+                arrow.className = "fa-solid fa-chevron-down text-[10px]";
+            }
+        }
+
+        // Toggle All Explanations Button
+        let allExpanded = false;
+        function toggleAllExplanations() {
+            if (!currentData) return;
+            allExpanded = !allExpanded;
+
+            const toggleAllBtn = document.getElementById('toggleAllBtn');
+            toggleAllBtn.innerHTML = allExpanded 
+                ? `<i class="fa-solid fa-eye-slash"></i><span>전체 정답 및 해설 접기</span>`
+                : `<i class="fa-solid fa-eye"></i><span>전체 정답 및 해설 펼치기</span>`;
+
+            currentData.quizzes.forEach(quiz => {
+                const fbBox = document.getElementById(`feedback-${quiz.id}`);
+                const toggleTxt = document.getElementById(`toggle-txt-${quiz.id}`);
+                const arrow = document.getElementById(`arrow-${quiz.id}`);
+                
+                if (allExpanded) {
+                    fbBox.classList.remove('hidden');
+                    if (toggleTxt) toggleTxt.innerText = "해설 접기";
+                    if (arrow) arrow.className = "fa-solid fa-chevron-up text-[10px]";
+                } else {
+                    fbBox.classList.add('hidden');
+                    if (toggleTxt) toggleTxt.innerText = "해설 보기";
+                    if (arrow) arrow.className = "fa-solid fa-chevron-down text-[10px]";
+                }
+            });
+        }
+
+        // Update Score Display Badge
+        function updateScoreDisplay() {
+            if (!currentData) return;
+            const total = currentData.quizzes.length;
+            const solvedKeys = Object.keys(userAnswers);
+            const correctCount = solvedKeys.filter(k => userAnswers[k].isCorrect).length;
+
+            document.getElementById('scoreDisplay').innerText = `${correctCount} / ${total}`;
+        }
+
+        // Reset Quiz User Answers
+        function resetAnswers() {
+            if (!currentData) return;
+            renderData(currentData);
+            showToast("퀴즈 답변이 초기화되었습니다.");
+        }
+
+        // Custom Toast Notification Function (Supports error color state)
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            if (isError) {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400 text-lg";
+                toast.classList.remove('border-indigo-500/40');
+                toast.classList.add('border-rose-500/40');
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+                toast.classList.remove('border-rose-500/40');
+                toast.classList.add('border-indigo-500/40');
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
